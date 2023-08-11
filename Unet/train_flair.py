@@ -2,7 +2,12 @@ import sys
 import os
 # x = sys.path.append(os.path.abspath(os.path.join('..','utils')))
 sys.path.append('../U-SAM-hybrid-model')
+<<<<<<< Updated upstream
 from utils.dataset import BratsDataset
+=======
+# from utils.dataset import BratsDataset
+from data import BratsDataset
+>>>>>>> Stashed changes
 # from dataset import shuffle_split
 import numpy as np
 import matplotlib.pyplot as plt
@@ -53,11 +58,16 @@ modality_types = ['flair']
 train_ds = BratsDataset(train_dirs, modality_types,transform = trn_tfms)
 
 
+<<<<<<< Updated upstream
 train_dl = DataLoader(train_ds, batch_size = 1, shuffle = False,pin_memory = True)
+=======
+train_dl = DataLoader(train_ds, batch_size = 4, shuffle = False,pin_memory = True)
+>>>>>>> Stashed changes
 
 from segment_anything.utils.transforms import ResizeLongestSide
 import matplotlib.patches as patches
 #confirm that the data loader is working as expected
+<<<<<<< Updated upstream
 for images,masks,bboxes in train_dl:
    print(f"{images.shape=}, {masks.shape=},{bboxes.shape=}")
    val, counts = np.unique(masks, return_counts=True)
@@ -68,6 +78,18 @@ for images,masks,bboxes in train_dl:
   
    print(bboxes)
    break
+=======
+# for images,masks,bboxes in train_dl:
+#    print(f"{images.shape=}, {masks.shape=},{bboxes.shape=}")
+#    val, counts = np.unique(masks, return_counts=True)
+#    if(1 - (counts[0]/counts.sum())) > 0.01:
+#     print('yes')
+#    else:
+#     print('no')
+  
+#    print(bboxes)
+#    break
+>>>>>>> Stashed changes
 
 
 import sys
@@ -80,7 +102,12 @@ model_type = "vit_b"
 device = torch.device("cpu")
 # "cuda"
 
+<<<<<<< Updated upstream
 sam_model = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+=======
+sam_model = sam_model_registry[model_type](num_classes = 3,checkpoint=sam_checkpoint)
+
+>>>>>>> Stashed changes
 sam_model.to(device=device)
 
 mask_generator = SamAutomaticMaskGenerator(sam_model)
@@ -109,13 +136,29 @@ os.makedirs(model_save_path, exist_ok=True)
 num_epochs = 10
 losses = []
 best_loss = 1e10
+<<<<<<< Updated upstream
+=======
+num_classes = 3
+if num_classes > 1:
+    multimask_output = True
+else:
+    multimask_output = False
+
+
+>>>>>>> Stashed changes
 for epoch in range(num_epochs):
     epoch_loss = 0
     # train
     for step, (image_embedding, gt2D, boxes) in enumerate(tqdm(train_dl)):
+<<<<<<< Updated upstream
       val, counts = np.unique(masks, return_counts=True)
       if(1 - (counts[0]/counts.sum())) > 0.01:
         image_embedding = image_embedding.repeat(1, 3, 1, 1)
+=======
+      val, counts = np.unique(gt2D, return_counts=True)
+      if(1 - (counts[0]/counts.sum())) > 0.01:
+        # image_embedding = image_embedding.repeat(1, 3, 1, 1)
+>>>>>>> Stashed changes
         sam_trans = ResizeLongestSide(sam_model.image_encoder.img_size)
         trans_image = sam_trans.apply_image_torch(image_embedding)
         trans_image = trans_image.float()
@@ -141,17 +184,49 @@ for epoch in range(num_epochs):
                 boxes=box_torch,
                 masks=None,
             )
+<<<<<<< Updated upstream
         # predicted masks
         batch_size = image_embedding.size(0)
         dense_prompt_embeddings = dense_embeddings.repeat(batch_size, 1, 1, 1)
+=======
+
+            # if num_classes > 1:
+            #     multimask_output = True
+            # else:
+            #     multimask_output = False
+
+            # mask_predictions = image_embedding.size * 3
+
+
+        # predicted masks
+        batch_size = image_embedding.size(0)
+        dense_prompt_embeddings = dense_embeddings#.repeat(batch_size, 1, 1, 1)
+        
+>>>>>>> Stashed changes
         mask_predictions, _ = sam_model.mask_decoder(
             image_embeddings=image_embedding.to(device), # (B, 256, 64, 64)
             image_pe=sam_model.prompt_encoder.get_dense_pe(), # (1, 256, 64, 64)
             sparse_prompt_embeddings=sparse_embeddings, # (B, 2, 256)
             dense_prompt_embeddings=dense_prompt_embeddings, #dense_embeddings.repeat(image_embedding.size(0), 1, 1, 1), # (B, 256, 64, 64)
+<<<<<<< Updated upstream
             multimask_output=False,
           )
 
+=======
+            multimask_output=True,
+          )
+
+        # mask_predictions = image_embedding.size * 4
+
+
+        # if num_classes > 1:
+        #     multimask_output = True
+        # else:
+        #     multimask_output = False
+
+        # mask_predictions = image_embedding.size * 4
+
+>>>>>>> Stashed changes
         loss = seg_loss(mask_predictions, gt2D.to(device))
         optimizer.zero_grad()
         loss.backward()
